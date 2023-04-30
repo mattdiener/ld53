@@ -1,0 +1,12 @@
+{
+    "vscode-color-picker.languages": [
+        "csharp",
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "postcss",
+        "xml",
+        "html"
+    ]
+}
