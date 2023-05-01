@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7rmofhwb114f"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_f15q0"]
+radius = 0.1
+height = 0.2
+
+[node name="ObjSpawn" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 87.7869, 44.0231, 91.1954)
+
+[node name="Vis" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_f15q0")

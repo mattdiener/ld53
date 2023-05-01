@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 public partial class Character : RigidBody3D
@@ -18,6 +19,12 @@ public partial class Character : RigidBody3D
 	float jumpStrength = 12.0f;
 
 	[Export]
+	AudioStreamPlayer yepPlayer;
+
+	[Export]
+	AudioStreamPlayer oofPlayer;
+
+	[Export]
 	Node3D forward;
 
 	[Export]
@@ -36,7 +43,16 @@ public partial class Character : RigidBody3D
 	Area3D floorDetector;
 
 	[Export]
+	Game game;
+
+	[Export]
 	CollisionShape3D collisionShape;
+
+	List<MountPoint> mountPoints;
+	List<Item> objectsOnMounts;
+
+	[Export]
+	Node3D worldRoot;
 
 	[Export]
 	float speed = 30.0f;
@@ -56,9 +72,13 @@ public partial class Character : RigidBody3D
 	[Export]
 	float uprightThreshold = 0.8f;
 
-	bool isRunning = false;
-	bool justJumped = false;
-	bool beginJump = false;
+	RandomNumberGenerator rand = new();
+	public bool IsActive {get; set;}
+
+	bool isRunning;
+	bool justJumped;
+	bool beginJump;
+	bool wasUpright;
 
 	int floorCount = 0;
 
@@ -68,17 +88,85 @@ public partial class Character : RigidBody3D
 		animationPlayer.CurrentAnimation = "idle";
 		floorDetector.BodyEntered += enterFloor;
 		floorDetector.BodyExited += exitFloor;
+
+		InitMountPoints();
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+		if (!IsActive) {
+			return;
+		}
+
 		ResetFrameState();
+		ProcessFall();
 		ProcessWalk();
 		ProcessLeanAndRotate();
 		ProcessJump();
 		ProcessCamera();
 		PickAnimation();
+	}
+
+	public bool CanHoldItem() {
+		for (int i = 0; i < objectsOnMounts.Count; i++) {
+			if (objectsOnMounts[i] == null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void HoldItem(Item item) {
+		List<int> freeIndexes = new();
+		for (int i = 0; i < objectsOnMounts.Count; i++) {
+			if (objectsOnMounts[i] == null) {
+				freeIndexes.Add(i);
+			}
+		}
+		if (freeIndexes.Count == 0) {
+			GD.Print("All loaded up!");
+			return;
+		}
+		int chosenIdx = freeIndexes[rand.RandiRange(0, freeIndexes.Count-1)];
+		MountPoint chosenMount = mountPoints[chosenIdx];
+
+		// Reparent
+		Vector3 itemGlobalPosition = item.GlobalPosition;
+		item.GetParent().RemoveChild(item);
+		chosenMount.AddChild(item);
+		item.GlobalPosition = itemGlobalPosition;
+
+		objectsOnMounts[chosenIdx] = item;
+		item.Freeze = true;
+		item.CollisionLayer = 0;
+		Tween t = CreateTween();
+		t.TweenProperty(item, "position", new Vector3(0.0f, 0.0f, 0.0f), 0.5f).SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.InOut);
+		t.TweenCallback(Callable.From(() => {
+			Vector3 posBeforeReparent = item.GlobalPosition;
+			chosenMount.RemoveChild(item);
+			worldRoot.AddChild(item);
+			item.GlobalPosition = posBeforeReparent;
+			item.Freeze = false;
+			item.CollisionLayer = 1;
+
+			// possible that we fell in that half second
+			if (objectsOnMounts[chosenIdx] != item) {
+				return;
+			}
+			item.Parent = chosenMount;
+		}));
+	}
+
+	void InitMountPoints() {
+		mountPoints = new();
+		objectsOnMounts = new();
+		foreach (var mp in FindChildren("*")) {
+			if (mp is MountPoint mount) {
+				mountPoints.Add(mount);
+				objectsOnMounts.Add(null);
+			}
+		}
 	}
 
 	void ResetFrameState() {
@@ -96,9 +184,11 @@ public partial class Character : RigidBody3D
 
 		if (IsOnGround() && !IsUpright()) {
 			animationPlayer.CurrentAnimation = "fallen";
+			return;
 		}
 
 		if (beginJump) {
+			yepPlayer.Play(0);
 			animationPlayer.CurrentAnimation = "jump";
 			justJumped = true;
 			return;
@@ -108,8 +198,26 @@ public partial class Character : RigidBody3D
 			animationPlayer.CurrentAnimation = "run";
 			return;
 		}
-		
+
 		animationPlayer.CurrentAnimation = "idle";
+	}
+
+	void ProcessFall() {
+		if (IsUpright()) {
+			wasUpright = true;
+			return;
+		}
+
+		// In air means we haven't fallen.
+		if (!IsOnGround()) {
+			return;
+		}
+
+		// Now fallen
+		if (wasUpright) {
+			OnFall();
+		}
+		wasUpright = false;
 	}
 
 	void ProcessWalk() {
@@ -150,7 +258,7 @@ public partial class Character : RigidBody3D
 		}
 
 		Vector3 vUp = up.GlobalPosition - GlobalPosition;
-		if (Input.IsActionJustPressed("jump")) {
+		if (Input.IsActionJustPressed("jump") && !justJumped) {
 			ApplyCentralImpulse(vUp * Mass * jumpStrength);
 			beginJump = true;
 		}
@@ -187,11 +295,44 @@ public partial class Character : RigidBody3D
 
 	}
 
+	void OnFall() {
+		oofPlayer.Play(0);
+		List<Item> toDetach = new();
+		for (int i = 0; i < objectsOnMounts.Count; i++) {
+			if (objectsOnMounts[i] != null) {
+				toDetach.Add(objectsOnMounts[i]);
+				objectsOnMounts[i] = null;
+			}
+		}
+		game.ReturnToWorld(toDetach);
+	}
+
+	public void TransferItemsToBox(DeliveryBox box, Callable callback) {
+		List<Item> toDeposit = new();
+		for (int i = 0; i < objectsOnMounts.Count; i++) {
+			if (objectsOnMounts[i] != null) {
+				toDeposit.Add(objectsOnMounts[i]);
+				objectsOnMounts[i] = null;
+			}
+		}
+		box.Deposit(toDeposit, callback);
+	}
+
+	public int CountItems() {
+		int count = 0;
+		for (int i = 0; i < objectsOnMounts.Count; i++) {
+			if (objectsOnMounts[i] != null) {
+				count++;
+			}
+		}
+		return count;
+	}
+
 	void ProcessCamera() {
 		Vector3 vForward = forward.GlobalPosition - GlobalPosition;
 		Vector3 forwardXZ = new(vForward.X, 0, vForward.Z);
 		if (forwardXZ != Vector3.Zero) {
-			cameraOnPath.GlobalPosition = GlobalPosition - (forwardXZ * 2.0f) + Vector3.Up;
+			cameraOnPath.GlobalPosition = GlobalPosition - (forwardXZ * 2.0f) + (Vector3.Up * 1.5f);
 			var angle = Mathf.Atan2(forwardXZ.X, forwardXZ.Z);
 			cameraOnPath.Rotation = RotateTowards(cameraOnPath.Rotation, new(0, angle, 0));
 		}
@@ -224,11 +365,19 @@ public partial class Character : RigidBody3D
 		return new Vector3(0, oldY+cameraRotationSpeed, 0);
 	}
 
+	public void AppendCameraTween(Tween t) {
+		Vector3 vForward = forward.GlobalPosition - GlobalPosition;
+		Vector3 forwardXZ = new(vForward.X, 0, vForward.Z);
+		var angle = Mathf.Atan2(forwardXZ.X, forwardXZ.Z);
+		t.Parallel().TweenProperty(cameraOnPath, "position", GlobalPosition - (forwardXZ * 2.0f) + Vector3.Up, 0.5f).SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.InOut);
+		t.Parallel().TweenProperty(cameraOnPath, "rotation", new Vector3(0.0f, angle, 0.0f), 0.5f).SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.InOut);
+	}
+
 	bool IsOnGround() {
 		return floorCount > 0;
 	}
 
-	bool IsUpright() {
+	public bool IsUpright() {
 		return (up.GlobalPosition - GlobalPosition).Y >= uprightThreshold;
 	}
 

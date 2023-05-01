@@ -1,0 +1,74 @@
+[gd_scene load_steps=7 format=3 uid="uid://suo5ijids1sh"]
+
+[ext_resource type="Script" path="res://scripts/HudNode.cs" id="1_siebj"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hqnly"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_5uu4g"]
+font_size = 24
+font_color = Color(0.894118, 0.839216, 0.952941, 1)
+outline_size = 9
+outline_color = Color(0.2, 0.121569, 0.286275, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_juepa"]
+font_color = Color(0.894118, 0.839216, 0.952941, 1)
+outline_size = 4
+outline_color = Color(0.2, 0.121569, 0.286275, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f0cll"]
+bg_color = Color(0.894118, 0.839216, 0.952941, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.2, 0.121569, 0.286275, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="LabelSettings" id="LabelSettings_er3f3"]
+font_size = 32
+font_color = Color(0.2, 0.121569, 0.286275, 1)
+
+[node name="HudNode" type="PanelContainer" node_paths=PackedStringArray("nameLabel", "distanceLabel", "pickupIndicator")]
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hqnly")
+script = ExtResource("1_siebj")
+nameLabel = NodePath("HBoxContainer/VBox/Name")
+distanceLabel = NodePath("HBoxContainer/VBox/Distance")
+pickupIndicator = NodePath("HBoxContainer/PickupIndicator")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Name" type="Label" parent="HBoxContainer/VBox"]
+layout_mode = 2
+text = "Carrot"
+label_settings = SubResource("LabelSettings_5uu4g")
+horizontal_alignment = 1
+
+[node name="Distance" type="Label" parent="HBoxContainer/VBox"]
+layout_mode = 2
+text = "100m"
+label_settings = SubResource("LabelSettings_juepa")
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="HBoxContainer"]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+
+[node name="PickupIndicator" type="PanelContainer" parent="HBoxContainer"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_f0cll")
+
+[node name="Label" type="Label" parent="HBoxContainer/PickupIndicator"]
+layout_mode = 2
+text = "F"
+label_settings = SubResource("LabelSettings_er3f3")
+horizontal_alignment = 1

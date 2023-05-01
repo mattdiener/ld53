@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://clnxsopybc15b"
+path="res://.godot/imported/oof.mp3-1e85ce02d95c28c4a70202524137df4f.mp3str"
+
+[deps]
+
+source_file="res://song Project/oof.mp3"
+dest_files=["res://.godot/imported/oof.mp3-1e85ce02d95c28c4a70202524137df4f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

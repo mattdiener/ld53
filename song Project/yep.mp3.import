@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://4ccl5pw7nl7v"
+path="res://.godot/imported/yep.mp3-41f9cd6eb1cb90f68487c307638a68c7.mp3str"
+
+[deps]
+
+source_file="res://song Project/yep.mp3"
+dest_files=["res://.godot/imported/yep.mp3-41f9cd6eb1cb90f68487c307638a68c7.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

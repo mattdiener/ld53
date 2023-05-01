@@ -1,0 +1,120 @@
+[gd_scene load_steps=18 format=3 uid="uid://uqy61gmrcf2b"]
+
+[ext_resource type="Script" path="res://scripts/Item.cs" id="1_6q0gg"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_62yfy"]
+radius = 0.1
+height = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3aycq"]
+albedo_color = Color(0.780392, 0.45098, 0, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_b47dy"]
+material = SubResource("StandardMaterial3D_3aycq")
+top_radius = 0.1
+bottom_radius = 0.03
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1n0x3"]
+albedo_color = Color(0.027451, 0.580392, 0, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_4akib"]
+material = SubResource("StandardMaterial3D_1n0x3")
+size = Vector3(0.1, 0.1, 0.2)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_ovyap"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_dgvp2"]
+seamless = true
+noise = SubResource("FastNoiseLite_ovyap")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v75tk"]
+albedo_color = Color(0.27451, 0.517647, 0.196078, 1)
+albedo_texture = SubResource("NoiseTexture2D_dgvp2")
+
+[sub_resource type="SphereMesh" id="SphereMesh_fp1v3"]
+material = SubResource("StandardMaterial3D_v75tk")
+radius = 0.3
+height = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u07cg"]
+albedo_color = Color(0.631373, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_truvn"]
+material = SubResource("StandardMaterial3D_u07cg")
+radius = 0.1
+height = 0.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7d8ar"]
+albedo_color = Color(0.368627, 0.192157, 0.0784314, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_thvtf"]
+material = SubResource("StandardMaterial3D_7d8ar")
+top_radius = 0.004
+bottom_radius = 0.004
+height = 0.1
+
+[sub_resource type="Curve" id="Curve_j73sx"]
+_data = [Vector2(0, 0), 0.0, 5.19545, 0, 0, Vector2(0.490814, 0.7), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hcieo"]
+cull_mode = 2
+albedo_color = Color(0, 1, 0, 1)
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_gbpso"]
+material = SubResource("StandardMaterial3D_hcieo")
+shape = 0
+size = 0.02
+sections = 2
+section_length = 0.02
+curve = SubResource("Curve_j73sx")
+
+[node name="CollectItem" type="RigidBody3D" node_paths=PackedStringArray("carrotRoot", "watermelonRoot", "appleRoot")]
+script = ExtResource("1_6q0gg")
+carrotRoot = NodePath("CarrotRoot")
+watermelonRoot = NodePath("WatermelonRoot")
+appleRoot = NodePath("AppleRoot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_62yfy")
+
+[node name="CarrotRoot" type="Node3D" parent="."]
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CarrotRoot"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0.0758719, 0, 0)
+mesh = SubResource("CylinderMesh_b47dy")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="CarrotRoot"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.205032, 0, 0)
+mesh = SubResource("PrismMesh_4akib")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="CarrotRoot"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0.730091, 0.68335, 3.19133e-08, -0.68335, 0.730091, -2.98702e-08, -0.205032, 0, 0)
+mesh = SubResource("PrismMesh_4akib")
+
+[node name="WatermelonRoot" type="Node3D" parent="."]
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WatermelonRoot"]
+mesh = SubResource("SphereMesh_fp1v3")
+
+[node name="AppleRoot" type="Node3D" parent="."]
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AppleRoot"]
+mesh = SubResource("SphereMesh_truvn")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="AppleRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.115613, 0)
+mesh = SubResource("CylinderMesh_thvtf")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="AppleRoot"]
+transform = Transform3D(0.725326, 0.688405, 0, -0.688405, 0.725326, 0, 0, 0, 1, 0.0152041, 0.129935, 0)
+mesh = SubResource("RibbonTrailMesh_gbpso")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="AppleRoot"]
+transform = Transform3D(0.79523, -0.606308, 0, 0.606308, 0.79523, 0, 0, 0, 1, -0.0147983, 0.153128, 0)
+mesh = SubResource("RibbonTrailMesh_gbpso")
